@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Predicting and Preventing Customer Churn — Minhajur Rahman</title>
+<meta name="description" content="Predicts customer churn in telecom using the Telco Customer Churn dataset. Applies linear & logistic regression, hypothesis testing, and A/B testing to identify churn drivers and validate retention strategies.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F4EF;
+    --ink:#1B2340;
+    --ink-soft:#4A5170;
+    --churn:#C8483A;
+    --retain:#2E7D74;
+    --line:#D8D3C6;
+    --card:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 28px;}
+
+  /* Top bar */
+  .topbar{
+    border-bottom:1px solid var(--line);
+    padding:20px 0;
+  }
+  .topbar .wrap{display:flex;justify-content:space-between;align-items:center;}
+  .brand{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .topbar nav a{
+    font-size:14px;
+    text-decoration:none;
+    color:var(--ink-soft);
+    margin-left:24px;
+  }
+  .topbar nav a:hover{color:var(--ink);}
+
+  /* Hero */
+  .hero{padding:72px 0 40px;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--churn);
+    margin:0 0 18px;
+  }
+  h1{
+    font-family:'IBM Plex Serif', serif;
+    font-weight:500;
+    font-size:clamp(34px, 5vw, 54px);
+    line-height:1.12;
+    margin:0 0 22px;
+    max-width:14ch;
+  }
+  .lede{
+    font-size:18px;
+    color:var(--ink-soft);
+    max-width:56ch;
+    margin:0 0 36px;
+  }
+
+  /* Split-bar signature element */
+  .splitbar-block{margin:40px 0 8px;}
+  .splitbar{
+    display:flex;
+    height:54px;
+    border-radius:4px;
+    overflow:hidden;
+    border:1px solid var(--ink);
+  }
+  .splitbar .retain{background:var(--retain);width:73.5%;}
+  .splitbar .churn{background:var(--churn);width:26.5%;}
+  .splitbar-labels{
+    display:flex;
+    justify-content:space-between;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:10px;
+  }
+  .splitbar-labels strong{color:var(--ink);font-weight:600;}
+
+  .cta-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:36px;}
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:13px 22px;
+    border-radius:3px;
+    text-decoration:none;
+    font-size:15px;
+    font-weight:600;
+    border:1px solid var(--ink);
+  }
+  .btn-primary{background:var(--ink);color:var(--paper);}
+  .btn-primary:hover{background:#0F1428;}
+  .btn-secondary{background:transparent;color:var(--ink);}
+  .btn-secondary:hover{background:var(--ink);color:var(--paper);}
+
+  /* Sections */
+  section{padding:52px 0;border-top:1px solid var(--line);}
+  h2{
+    font-family:'IBM Plex Serif', serif;
+    font-weight:500;
+    font-size:26px;
+    margin:0 0 22px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:16px;
+  }
+  @media (max-width:640px){.grid{grid-template-columns:1fr;}}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:20px 22px;
+  }
+  .card h3{
+    font-size:15px;
+    margin:0 0 6px;
+    font-weight:600;
+  }
+  .card p{
+    font-size:14px;
+    color:var(--ink-soft);
+    margin:0;
+  }
+  .tag-row{display:flex;flex-wrap:wrap;gap:10px;}
+  .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    padding:8px 14px;
+    border:1px solid var(--ink);
+    border-radius:20px;
+    background:var(--card);
+  }
+  .method-list{list-style:none;margin:0;padding:0;}
+  .method-list li{
+    display:flex;
+    gap:18px;
+    padding:16px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .method-list li:last-child{border-bottom:none;}
+  .method-num{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--churn);
+    font-size:14px;
+    flex:0 0 26px;
+    padding-top:2px;
+  }
+  .method-body h3{font-size:15px;margin:0 0 4px;font-weight:600;}
+  .method-body p{font-size:14px;color:var(--ink-soft);margin:0;}
+
+  footer{
+    border-top:1px solid var(--line);
+    padding:32px 0 48px;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  footer a{text-decoration:underline;}
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="wrap">
+      <div class="brand">Minhajur Rahman · MSc, The University of Law</div>
+      <nav>
+        <a href="#overview">Overview</a>
+        <a href="#methods">Methods</a>
+        <a href="#skills">Skills</a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section class="hero" style="border-top:none;padding-top:64px;">
+      <p class="eyebrow">Data Analytics Report</p>
+      <h1>Predicting and Preventing Customer Churn</h1>
+      <p class="lede">A data-driven analysis of the Telco Customer Churn dataset — using regression, hypothesis testing, and A/B testing to find out who leaves, and why.</p>
+
+      <div class="splitbar-block">
+        <div class="splitbar">
+          <div class="retain"></div>
+          <div class="churn"></div>
+        </div>
+        <div class="splitbar-labels">
+          <span><strong>73.5%</strong> retained</span>
+          <span><strong>26.5%</strong> churned — 1,869 of 7,043 customers</span>
+        </div>
+      </div>
+
+      <div class="cta-row">
+        <a class="btn btn-primary" href="telco-customer-churn-prediction_docx.docx" download>Download full report (.docx)</a>
+        <a class="btn btn-secondary" href="#overview">Read the summary ↓</a>
+      </div>
+    </section>
+
+    <section id="overview">
+      <h2>Project overview</h2>
+      <p style="max-width:64ch;color:var(--ink-soft);font-size:15.5px;">
+        This report applies data analytics and predictive modelling to the IBM Telco Customer Churn dataset
+        to identify the key drivers of customer churn in the telecommunications sector. It combines linear
+        regression, logistic regression, hypothesis testing, and a simulated A/B test to turn data-driven
+        insights into actionable customer retention strategies — shifting the business from reacting to churn
+        to preventing it.
+      </p>
+      <div class="grid" style="margin-top:26px;">
+        <div class="card">
+          <h3>Month-to-month risk</h3>
+          <p>Contract type is the strongest single predictor — month-to-month customers churn at a far higher rate than those on annual contracts.</p>
+        </div>
+        <div class="card">
+          <h3>Pricing pressure</h3>
+          <p>A t-test (p &lt; 0.05) confirms churned customers pay significantly higher monthly charges than retained ones.</p>
+        </div>
+        <div class="card">
+          <h3>Early tenure is critical</h3>
+          <p>Churn risk concentrates in a customer's first year, pointing to a window for early intervention.</p>
+        </div>
+        <div class="card">
+          <h3>Retention offers work</h3>
+          <p>Simulated A/B testing shows high-risk customers who receive a targeted offer churn less than a control group.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="methods">
+      <h2>Methods applied</h2>
+      <ul class="method-list">
+        <li>
+          <span class="method-num">01</span>
+          <div class="method-body">
+            <h3>Linear regression</h3>
+            <p>Forecasts how monthly charges relate to customer tenure, exposing revenue patterns as customers stay longer.</p>
+          </div>
+        </li>
+        <li>
+          <span class="method-num">02</span>
+          <div class="method-body">
+            <h3>Logistic regression</h3>
+            <p>Classifies churn risk using contract type, tenure, and monthly charges as predictors.</p>
+          </div>
+        </li>
+        <li>
+          <span class="method-num">03</span>
+          <div class="method-body">
+            <h3>Hypothesis testing</h3>
+            <p>An independent samples t-test verifies whether pricing differs significantly between churned and retained customers.</p>
+          </div>
+        </li>
+        <li>
+          <span class="method-num">04</span>
+          <div class="method-body">
+            <h3>A/B testing</h3>
+            <p>A simulated retention experiment measures whether targeted offers reduce churn among high-risk customers.</p>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <section id="skills">
+      <h2>Skills &amp; tools</h2>
+      <div class="tag-row">
+        <span class="tag">Data Analytics</span>
+        <span class="tag">Predictive Modelling</span>
+        <span class="tag">Hypothesis Testing</span>
+        <span class="tag">A/B Testing</span>
+        <span class="tag">Business Analysis</span>
+        <span class="tag">Python</span>
+        <span class="tag">Scikit-learn</span>
+        <span class="tag">Google Colab</span>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      Minhajur Rahman — MSc Student, The University of Law, 2026. Full report available as a
+      <a href="telco-customer-churn-prediction_docx.docx" download>downloadable Word document</a>.
+    </div>
+  </footer>
+
+</body>
+</html>
